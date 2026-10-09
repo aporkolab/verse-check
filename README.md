@@ -40,7 +40,7 @@ jobs:
 
 For a report that never blocks a merge over metre, leave `strict` at its default, `'false'`. A missing file, invalid configuration or engine failure still fails the action.
 
-For production workflows, pin this action to a reviewed full commit SHA rather than the moving `v1` tag.
+`v1` is the maintained major-version branch. For production workflows, pin this action to a reviewed full commit SHA or a versioned release tag.
 
 ## PR title mode
 
@@ -48,7 +48,9 @@ On `pull_request`, the action reads the title from GitHub's JSON event file. The
 
 ```yaml
 name: Is this PR a hexameter?
-on: [pull_request]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
 permissions:
   contents: read
 jobs:
