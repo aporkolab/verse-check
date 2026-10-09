@@ -1,0 +1,35 @@
+name: Verify the verse checker
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Exercise the composite action with a real hexameter
+        id: smoke
+        uses: ./
+        with:
+          files: examples/hexameter.txt
+          expected-meter: hexameter
+          strict: 'true'
+      - name: Check the public outputs
+        env:
+          PASSED: ${{ steps.smoke.outputs.passed }}
+          CHECKED: ${{ steps.smoke.outputs.checked-lines }}
+        run: test "$PASSED" = true && test "$CHECKED" = 1
+      - name: Build an engine for integration tests
+        id: engine
+        run: python3 scripts/build_engine.py
+      - name: Verify strict mode, reports, path boundaries and PR-title handling
+        env:
+          VERSE_ENGINE_JAR: ${{ steps.engine.outputs.jar }}
+        run: python3 -m unittest discover -s tests -v

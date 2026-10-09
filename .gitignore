@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.venv/
+.local-engine/
+verse-check-report.json

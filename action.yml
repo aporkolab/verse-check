@@ -1,0 +1,57 @@
+name: Kalliope Verse Check
+description: Scan Hungarian verse with the real Kalliope engine. Optional hexameter check for PR titles.
+author: Porkoláb Ádám
+branding:
+  icon: feather
+  color: purple
+inputs:
+  files:
+    description: Newline-separated workspace-relative glob patterns for UTF-8 plain-text poems. Set to an empty string for PR-title-only mode.
+    default: 'poems/**/*.txt'
+  expected-meter:
+    description: Exact Kalliope metre ID or name required on every nonblank line; 'any' accepts any recognized quantitative metre.
+    default: hexameter
+  check-pr-title:
+    description: Also check the pull request title for hexameter. Requires a pull_request event.
+    default: 'false'
+  strict:
+    description: Fail the step for a metre mismatch. Configuration and engine errors always fail.
+    default: 'false'
+outputs:
+  passed:
+    description: 'true if every checked line matched its expected metre.'
+    value: ${{ steps.scan.outputs.passed }}
+  checked-lines:
+    description: Number of checked lines, including the optional PR title.
+    value: ${{ steps.scan.outputs.checked-lines }}
+  mismatched-lines:
+    description: Number of lines without the expected metre.
+    value: ${{ steps.scan.outputs.mismatched-lines }}
+  report:
+    description: Absolute path to the JSON report on the runner.
+    value: ${{ steps.scan.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - name: Set up the Kalliope JDK
+      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
+      with:
+        distribution: temurin
+        java-version: '17'
+    - name: Build the pinned Kalliope core
+      id: engine
+      shell: bash
+      env:
+        VERSE_ACTION_PATH: ${{ github.action_path }}
+      run: python3 "$VERSE_ACTION_PATH/scripts/build_engine.py"
+    - name: Scan verse
+      id: scan
+      shell: bash
+      env:
+        VERSE_ACTION_PATH: ${{ github.action_path }}
+        VERSE_ENGINE_JAR: ${{ steps.engine.outputs.jar }}
+        VERSE_FILES: ${{ inputs.files }}
+        VERSE_EXPECTED_METER: ${{ inputs.expected-meter }}
+        VERSE_CHECK_PR_TITLE: ${{ inputs.check-pr-title }}
+        VERSE_STRICT: ${{ inputs.strict }}
+      run: python3 "$VERSE_ACTION_PATH/scripts/verse_check.py"
