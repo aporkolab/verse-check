@@ -129,6 +129,6 @@ For an existing checkout of the locked Kalliope revision, use `python3 scripts/b
 
 The wrapper and workflow are MIT-licensed, © 2026 Porkoláb Ádám.
 
-**Kalliope is a joint work.** Váradi Nagy Pál created the original program and metrical canon around 2004–2006. Porkoláb Ádám built the modern Java implementation and web application. Kalliope keeps its [own copyright, MIT license and corpus notices](https://github.com/aporkolab/Kalliope/blob/27926ab7baa4ac841eedf2092439642cb4692076/LICENSE). This action fetches that project at runtime; its upstream corpus is not relicensed by this repository.
+**Kalliope is a joint work.** Váradi Nagy Pál created the original program and metrical canon around 2004–2006. Porkoláb Ádám built the modern Java implementation and web application. Kalliope keeps its [own copyright, MIT license and corpus notices](https://github.com/aporkolab/Kalliope/blob/fe186ed2bcd046afc359b78c516c7bfafbee7635/LICENSE). This action fetches that project at runtime; its upstream corpus is not relicensed by this repository.
 
 Built by [Porkoláb Ádám](https://github.com/aporkolab). Prefer hitting bugs to scanning verse? [Play Whack-a-Bug](https://aporkolab.github.io/).
