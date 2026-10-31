@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/aporkolab/Kalliope.git",
-  "commit": "27926ab7baa4ac841eedf2092439642cb4692076",
+  "commit": "fe186ed2bcd046afc359b78c516c7bfafbee7635",
   "mainClass": "hu.porkolab.kalliope.KalliopeCli",
   "javaRelease": "17"
 }

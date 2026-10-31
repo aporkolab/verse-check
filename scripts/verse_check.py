@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_FILES = 50
 MAX_FILE_BYTES = 64 * 1024
 MAX_TOTAL_BYTES = 256 * 1024
+SUMMARY_LINES = 150
 
 
 def boolean(value: str) -> bool:
@@ -32,8 +33,9 @@ def collect_files(workspace: Path, patterns: str) -> list[Path]:
         if Path(pattern).is_absolute() or ".." in Path(pattern).parts:
             raise ValueError("File patterns must stay inside the workspace")
         matches = []
-        for candidate in glob.iglob(str(workspace / pattern), recursive=True):
-            path = Path(candidate)
+        # root_dir keeps glob metacharacters in the workspace path itself from being expanded.
+        for candidate in glob.iglob(pattern, root_dir=workspace, recursive=True):
+            path = workspace / candidate
             if not path.is_file():
                 continue
             path = path.resolve()
@@ -52,8 +54,11 @@ def analyze(jar: Path, poem: str) -> dict:
     result = subprocess.run(
         ["java", "-Xmx256m", "-Dfile.encoding=UTF-8", "-jar", str(jar), "--json", "-"],
         input=poem, text=True, encoding="utf-8", capture_output=True, timeout=20,
-        check=True,
     )
+    if result.returncode != 0:
+        # Surface the engine's own diagnosis instead of only its exit status.
+        detail = result.stderr.strip().splitlines()[-1:] or ["no error output"]
+        raise ValueError(f"The Kalliope engine exited with status {result.returncode}: {detail[0][:500]}")
     data = json.loads(result.stdout)
     if not isinstance(data, dict) or not isinstance(data.get("stanzas"), list):
         raise ValueError("The engine returned an unexpected JSON structure")
@@ -99,15 +104,16 @@ def summary(report: dict) -> str:
     shown = 0
     for document in report["documents"]:
         for line in document["lines"]:
-            if shown >= 150:
-                continue
+            if shown >= SUMMARY_LINES:
+                break
             names = ", ".join(meter["name"] for meter in line["meters"]) or "No quantitative match"
             parts.append(f"| {cell(document['source'])} | {line['stanza']} / {line['line']} "
                          f"| <code>{cell(line['scansion'])}</code> | {cell(names)} "
                          f"| {'✓' if line['passed'] else '×'} {cell(line['expected'])} |")
             shown += 1
     if report["checkedLines"] > shown:
-        parts += ["", "Summary truncated after 150 lines. The JSON report contains every result."]
+        parts += ["", f"Summary truncated after {SUMMARY_LINES} lines. "
+                      "The JSON report contains every result."]
     parts += ["", "Recognition describes metre under Kalliope’s default pronunciation rules; "
               "it is not a verdict on literary quality. Accentual Hungarian verse can correctly "
               "have no quantitative match.", "",

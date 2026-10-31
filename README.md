@@ -103,7 +103,7 @@ The job summary shows scansion and recognized metres for each line. The JSON rep
 
 There is no reimplementation of syllable counting or metre matching here. No LLM, API key, Maven install, npm dependency or external poem-analysis service is involved. The engine download requires network access; poem analysis runs on the runner.
 
-Supported environment: GitHub-hosted Ubuntu runners, with Python 3.10+, Git and Bash. `setup-java` installs the JDK. Action dependencies and the engine are pinned; Dependabot maintains the action references. An engine update is an explicit change to `engine-lock.json`, accompanied by fresh integration results.
+Supported environment: GitHub-hosted Ubuntu runners, with Python 3.10+, Git and Bash. `setup-java` installs the JDK. Action dependencies and the engine are pinned; Dependabot maintains the action references and the development tools. An engine update is an explicit change to `engine-lock.json`, accompanied by fresh integration results.
 
 ## What a mismatch means
 
@@ -114,21 +114,25 @@ The wrapper limits each invocation to 50 files, 64 KiB per file and 256 KiB comb
 ## Development
 
 ```bash
-# JDK 17+ and Python 3.10+ required.
+# JDK 17+ and Python 3.10+ required. The action itself has no Python dependencies;
+# requirements-dev.txt pins the linter and test runner used by CI.
+python3 -m pip install -r requirements-dev.txt
+python3 -m ruff check .
+
 python3 scripts/build_engine.py
 # The command prints the temporary JAR path. Use that exact path below:
 export VERSE_ENGINE_JAR=/path/printed/by/build/kalliope-core.jar
-python3 -m unittest discover -s tests -v
+python3 -m pytest -v
 
 VERSE_FILES=examples/hexameter.txt VERSE_STRICT=true python3 scripts/verse_check.py
 ```
 
-For an existing checkout of the locked Kalliope revision, use `python3 scripts/build_engine.py --source /path/to/Kalliope`. This option is a local-development convenience, not an action input. CI exercises the public composite action and all integration tests against the pinned engine. The checked-in JSON fixture was emitted by that engine for `examples/hexameter.txt`.
+For an existing checkout of the locked Kalliope revision, use `python3 scripts/build_engine.py --source /path/to/Kalliope`. This option is a local-development convenience, not an action input. Without `VERSE_ENGINE_JAR` the integration tests are skipped and only the engine-free unit tests run. CI lints with ruff, exercises the public composite action and runs all tests against the pinned engine. The checked-in JSON fixture was emitted by that engine for `examples/hexameter.txt`.
 
 ## Credits and license
 
 The wrapper and workflow are MIT-licensed, © 2026 Porkoláb Ádám.
 
-**Kalliope is a joint work.** Váradi Nagy Pál created the original program and metrical canon around 2004–2006. Porkoláb Ádám built the modern Java implementation and web application. Kalliope keeps its [own copyright, MIT license and corpus notices](https://github.com/aporkolab/Kalliope/blob/27926ab7baa4ac841eedf2092439642cb4692076/LICENSE). This action fetches that project at runtime; its upstream corpus is not relicensed by this repository.
+**Kalliope is a joint work.** Váradi Nagy Pál created the original program and metrical canon around 2004–2006. Porkoláb Ádám built the modern Java implementation and web application. Kalliope keeps its [own copyright, MIT license and corpus notices](https://github.com/aporkolab/Kalliope/blob/fe186ed2bcd046afc359b78c516c7bfafbee7635/LICENSE). This action fetches that project at runtime; its upstream corpus is not relicensed by this repository.
 
 Built by [Porkoláb Ádám](https://github.com/aporkolab). Prefer hitting bugs to scanning verse? [Play Whack-a-Bug](https://aporkolab.github.io/).
