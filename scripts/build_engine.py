@@ -10,8 +10,11 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def build(source: Path, output: Path) -> Path:
-    lock = json.loads((ROOT / "engine-lock.json").read_text(encoding="utf-8"))
+def load_lock() -> dict:
+    return json.loads((ROOT / "engine-lock.json").read_text(encoding="utf-8"))
+
+
+def build(source: Path, output: Path, lock: dict) -> Path:
     sources = sorted((source / "kalliope-core/src/main/java").rglob("*.java"))
     if not sources:
         raise ValueError("No Kalliope Java sources found")
@@ -38,7 +41,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, help="Existing source checkout (local development only)")
     args = parser.parse_args()
-    lock = json.loads((ROOT / "engine-lock.json").read_text(encoding="utf-8"))
+    lock = load_lock()
     output = Path(tempfile.mkdtemp(prefix="verse-check-", dir=os.getenv("RUNNER_TEMP")))
     source = args.source
     if source is None:
@@ -50,10 +53,11 @@ def main():
         )
         subprocess.run(["git", "-C", str(source), "checkout", "--quiet", "--detach", "FETCH_HEAD"],
                        check=True, timeout=30)
-        commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
+        commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                         text=True, timeout=30).strip()
         if commit != lock["commit"]:
             raise ValueError("Fetched engine commit did not match engine-lock.json")
-    jar = build(source.resolve(), output)
+    jar = build(source.resolve(), output, lock)
     if os.getenv("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
             stream.write(f"jar={jar}\n")
