@@ -38,9 +38,9 @@ class BoundaryTests(unittest.TestCase):
                 verse_check.collect_files(workspace, "*.txt")
 
     def test_missing_pattern_cannot_pass_silently(self):
-        with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaisesRegex(ValueError, "matched no files"):
-                verse_check.collect_files(Path(directory), "missing/*.txt")
+        with tempfile.TemporaryDirectory() as directory, \
+                self.assertRaisesRegex(ValueError, "matched no files"):
+            verse_check.collect_files(Path(directory), "missing/*.txt")
 
     def test_summary_escapes_user_controlled_markup(self):
         report = {"passed": False, "checkedLines": 1, "mismatchedLines": 1,

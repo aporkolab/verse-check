@@ -1,0 +1,28 @@
+# Tooling configuration only: the action runs the scripts directly with the runner's python3.
+[project]
+name = "verse-check"
+version = "1.0.0"
+requires-python = ">=3.10"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
+ignore = [
+    # subprocess is the whole point: argv lists only, never a shell.
+    "S603", "S607",
+]
+# Typographic characters in user-facing summary text are intentional.
+allowed-confusables = ["’", "×"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S108"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
